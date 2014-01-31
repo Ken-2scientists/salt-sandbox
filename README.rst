@@ -2,7 +2,8 @@ Salt Sandbox
 ============
 
 This project sets up a multi-machine Vagrant file for the purpose of exploring Salt_.
-.. _Python: http://www.saltstack.com
+
+.. _Salt: http://www.saltstack.com
 
 To use: ::
 
