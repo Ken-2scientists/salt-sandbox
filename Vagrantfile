@@ -1,15 +1,19 @@
 VAGRANTFILE_API_VERSION = "2"
 
 $salt_master_install_script = <<SCRIPTA
-  wget -O - http://bootstrap.saltstack.org | sh -s -- -M -N
   echo "172.16.1.10     salt" >> /etc/hosts
   echo "172.16.1.20     minion" >> /etc/hosts
+  echo "salt" > /etc/hostname
+  hostname salt
+  wget -O - http://bootstrap.saltstack.org | sh -s -- -M -N
 SCRIPTA
 
 $salt_minion_install_script = <<SCRIPTB
-  wget -O - http://bootstrap.saltstack.org | sh
   echo "172.16.1.10     salt" >> /etc/hosts
   echo "172.16.1.20     minion" >> /etc/hosts
+  echo "minion" > /etc/hostname
+  hostname minion
+  wget -O - http://bootstrap.saltstack.org | sh
 SCRIPTB
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
