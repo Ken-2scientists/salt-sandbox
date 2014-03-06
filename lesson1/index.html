@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>ATS Introductory Salt Training - 2014-03-06</title>
+
+		<meta name="description" content="An introductory training presentation describing the use of SaltStack's salt infrastructure automation tool">
+		<meta name="author" content="Ken Smith">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1><a href="http://www.atsid.com">ATS</a> SaltStack Introductory Training</h1>
+					<h2>2014-03-06</h2>
+					<p>
+						<small>Presented by Ken Smith / <a href="http://twitter.com/Ken_2scientists">@Ken_2scientists</a></small>
+					</p>
+				</section>
+				<section>
+					<h1>Introduction</h1>
+				</section>
+				<section>
+					<h2>Section Objectives</h2>
+					After this section, you should be able to:
+					<ul>
+						<li>Explain the infrastructure automation problem Salt is designed to address </li>
+						<li>Describe the salt master/minion architecture</li>
+						<li>Manage minion registration including:
+						<ul>
+						    <li>Registering a new minion with a master</li>
+						    <li>Identify all registered minions</li>
+						    <li>Pre-seed a minion with a key</li>
+						</ul></li>
+						<li>Execute remote commands on all or some minions</li>
+						<li>Gather system information from a minion</li>
+						<li>Explain which commands/processes execute on a master versus on the minion</li>
+					</ul>
+				</section>
+				<section>
+					<section>
+						<h2>Overview</h2>
+						<p>
+							<a href="http://www.saltstack.com">Salt</a> is an infrastructure automation tool
+							designed to <em>scalably</em> manage (and deploy) systems.<br/>&nbsp; 
+						</p>
+						<h3>Quick facts</h3>
+						<ul>
+							<li>Salt is written in Python</li>
+							<li>Salt is Apache-2.0 licensed</li>
+							<li>Salt has been in active development since March 2011</li>
+							<li>SaltStack is the commercial company that backs the development of Salt, offering consulting, training, and certification services</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Infrastructure automation</h2>
+						<ul>
+							<li>System administration is typically performed by logging into a server, and using command-line tools or GUIs to alter system configuration</li>
+							<ul>
+								<li>This is rarely auditable</li>
+								<li>This is rarely reproducible</li>
+								<li>Systems become works of art</li>
+								<li>The time to recreate a system in case of disaster grows with the complexity</li>
+							</ul>
+							<li>Infrastructure automation and configuration management tools allow us to use tools like <code>diff</code> and source-control to <em>see</em> exactly what is being done</li>
+							<li>This applies to hardware like switches as well as servers</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Why Salt?</h2>
+						<p>There are a number of other open-source configuration management tools out there designed to manage systems. Why are we supporting the adoption of Salt when it's one of the newer players in the field?<br/>&nbsp;</p>
+
+						<h3>The competition</h3>
+						<ul>
+							<li><a href="http://www.ohloh.net/p/compare?project_0=salt&project_1=Puppet&project_2=Chef">Ohloh comparison of Salt, Puppet, Chef</a></li>
+							<li><a href="http://www.infoworld.com/d/data-center/review-puppet-vs-chef-vs-ansible-vs-salt-231308">InfoWorld article reviewing Puppet, Chef, Ansible, Salt</a></li>
+							<li><a href="https://devopsu.com/books/taste-test-puppet-chef-salt-stack-ansible.html">Taste Test: Puppet Chef Salt Ansible</a></li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Architecture</h2>	
+						<ul>
+							<li>Salt is designed as a <em>centralized</em> system management tool, using persistent processes running on both the manager and the managed systems.</li>
+							<li>The <em>master</em> maintains the knowledge of all managed systems. The master is your central control point and must be protected. It can bring up and take down your infrastructure.</li>
+							<li>The <em>minions</em> are the managed systems. Every minion is identified by a unique key (minion id) that allows you to <em>target</em> them. A common convention is to use the key to denote a function such as <code>projname-database-1</code>, <code>projname-appserver-1</code>, <code>projname-loadbalancer</code></li>
+						</ul>
+					</section>
+					<section>
+						<h2>Communication</h2>
+						<ul>
+							<li>Salt uses <a href="http://zeromq.org">0mq</a> (a distributed communication library). This allows it to manage large numbers of minions without blocking
+								(synchronous) communication. </li>
+							<li>Salt uses AES to encrypt all communication between the master and minions. This requires prior exchange and acceptance of shared keys.</li>
+						</ul>
+					</section>			
+				</section>
+				<section>
+					<h2>Setting up the sandbox</h2>
+					<p>
+						<ol>
+							<li>Install <a href="http://https://www.virtualbox.org/wiki/Downloads">VirtualBox</a></li>
+							<li>Install <a href="http://www.vagrantup.com/downloads.html">Vagrant</a></li>
+							<li>Install Git client (e.g. <a href="http://windows.github.com/">GitHub for Windows</a>, <a href="http://mac.github.com/">GitHub for Mac</a>)</li>
+							<li>Clone salt-sandbox repo:
+								<pre><code data-trim contenteditable>
+git clone https://github.com/Ken-2scientists/salt-sandbox
+								</code></pre></li>
+							<li>Download the basebox:
+								<pre><code data-trim contenteditable>
+vagrant box add precise32-stackstrap \
+ https://dl.dropboxusercontent.com/s/ftlm33esku2w8aa/ubuntu1204-i386.box
+								</code></pre></li>
+							<li>Launch the VMs:
+								<pre><code data-trim contenteditable>
+vagrant up master
+vagrant up minion
+								</code></pre></li>
+						</ol>
+					</p>
+				</section>
+				<section>
+					<section>
+						<h2>Key management w/ <code>salt-key</code></h2>
+						<ul>
+							<li>The minions by default will attempt to check in to a host identified by DNS as '<code>salt</code>'. Our Vagrantfile has pre-seeded the private IPs of the master and minion. To override the default, edit <code>/etc/salt/minion</code></li>
+							<li>On the master, to see all keys:
+								<pre><code data-trim contenteditable>sudo salt-key -L</code></pre></li>
+							<li>To accept all pending keys ('<code>-a</code>' to accept single key):
+								<pre><code data-trim contenteditable>sudo salt-key -A</code></pre></li>
+							<li>To delete all keys ('<code>-d</code>' to reject single key):
+								<pre><code data-trim contenteditable>sudo salt-key -D</code></pre>
+						    	Deleting a key is necessary if you want to regenerate a minion with a fixed ID.</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Pre-seeding keys</h2>
+						<ol>
+							<li>Generate a new keypair: <pre><code>salt-key --gen-keys=[key_name]</code></pre></li>
+							<li>Add the public key to the master's accepted keys: <pre><code>cp key_name.pub /etc/salt/pki/master/minions/[minion_id]</code></pre></li>
+							<li>Get the keypair to your minion securely</li>
+							<li>Place keypair in appropriate location before starting salt-minion daemon:
+								<pre><code>
+/etc/salt/pki/minion/minion.pem
+/etc/salt/pki/minion/minion.pub
+								</code></pre></li>
+						</ol>
+					</section>
+				</section>
+				<section>
+					<h2>First execution</h2>
+					<pre><code data-trim contenteditable>sudo salt \* cmd.run date</code></pre>
+					<ul>
+						<li>The first argument is the <em>target</em>. Here, we're targeting all minions. Globs are supported, which is where the naming convention becomes useful.</li>
+						<li>The second argument is the call function. As we'll see later, these will typically be <em>states</em></li>
+						<li>Any remaining arguments are passed as arguments to the call function.</li>
+					</ul>
+				</section>
+				<section>
+					<h2>Salt's pun-filled terminology</h2>
+					<table>
+						<tr>
+							<th>minion:</th>
+							<td>a managed server</th>
+						</tr>
+						<tr>
+							<th>grains:</th>
+							<td>minion-specific metadata that can be used for conditional configuration</td>
+						</tr>
+						<tr>
+							<th>pillar:</th>
+							<td>global data that can be selectively distributed to minions, especially used for sensitive data like connection URLs, passwords, etc</td>
+						</tr>
+					</table>
+				</section>
+				<section>
+					<h2>Retrieving minion-specific information</h2>
+					<ul>
+						<li>Retrieve all possible grain information (keys):
+							<pre><code>salt \* grains.ls</code></pre></li>
+						<li>Retrieve all grain information:
+							<pre><code>salt \* grains.items</code></pre></li>
+						<li>Retrieve the value for a specific grain:
+							<pre><code>salt \* grains.get os_family</code></pre></li>
+					</ul>
+				</section>
+				<section>
+					<h2>Where different commands run</h2>
+					<ul>
+						<li>grain data comes from each minion</li>
+						<li>pillar data comes from the master, but specific variables/values are provided to each minion, as configured</li>
+						<li>The <code>salt</code> command gathers grain information from minions, gathers pillar data, and orchestrates execution on minions</li>
+						<li><code>salt-call</code> can be run locally on a minion with identical syntax to <code>salt</code> except without the target argument</li>
+						<li>minions keep a cache of pillar data</li>
+				</section>
+				<section>
+					<h1>Salt States</h1>
+				</section>
+				<section>
+					<h2>Section Objectives</h2>
+					After this section, you should be able to:
+					<ul>
+						<li>Organize state (sls) files in a consistent directory structure per conventions</li>
+						<li>Create a self-contained state (sls) file to accomplish a goal</li>
+						<li>Use the dry-run <code>test=True</code> argument to test states</li>
+						<li>Use the pkg state to install software on minions</li>
+						<li>Use the file state to manage files on minions</li>
+						<li>Use the service state to manage services</li>
+						<li>Use the '<code>require</code>' attribute to ensure ordering of state application</li>
+						<li>Use jinja templating to execute conditional logic in a state file</li>
+						<li>Use the SaltStack documentation to look up options for a state</li>
+						<li>Debug the salt low-state data structure</li>
+						<li>Debug the sa</li>
+					</ul>
+				</section>
+				<section>
+					<section>
+						<h2>Why states?</h2>
+						<ul>
+							<li>When you write a shell or batch script, you're <em>imperatively</em> declaring commands to execute, but this has limitations</li>
+							<ul>
+								<li>What happens if you run the same command twice?</li>
+								<li>How do you handle commands that need to run in a specific order?</li>
+								<li>How do you repurpose commands?</li>
+							</ul>
+							<li>Salt encourages (but does not mandate) the use of declarative <em>states</em></li>
+							<ul>
+								<li>States describe how a minion <em>should be</em></li>
+								<li>States are backed by execution modules that <em>make it so</em></li>
+								<li>States, ideally, are idempotent</li>
+								<li>States can declare interdepencies</li>
+							</ul>
+						</ul>
+					</section>
+					<section>
+						<h2>Configuration as <em>data</em></h2>
+						<ul>
+							<li>In salt, the configuration of a system is treated as a set of data structures</li>
+							<li>Salt is written in Python, and Python makes heavy use of the <code>dict</code> structure. Python <code>dict</code>s and JSON are almost equivalent</li>
+							<li>Neat salt trick:
+							<pre><code>
+sudo salt \* network.interfaces --out=json
+sudo salt \* network.interfaces --out=txt
+sudo salt \* network.interfaces --out=yaml
+sudo salt \* network.interfaces --out=pprint
+							</code></pre></li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<h2>Directory organization</h2>
+					<ul>
+						<li>The primary file in <code>/srv/salt</code> is the <code>top.sls</code>. This file determines which states to apply to which minions
+							<pre><code># /srv/salt/top.sls
+base:
+  '*':
+    - webserver
+							</code></pre>
+						</li>
+						<li>A top file can specify different configurations for different environments. The default environment is always <code>base</code>.
+						<li>The <code>webserver</code> module can define specific configuration settings in a file <code>webserver.sls</code> or <code>webserver/init.sls</code>. The latter is preferred as soon as the configuration gets complex.</li>
+					</ul>
+				</section>
+				<section>
+					<h2>Targeting in <code>top.sls</code></h2>
+					<pre><code># /srv/salt/top.sls
+base:
+  'projname-web*':
+     - webserver
+  'projname-db*':
+     - database
+  'projname-lb*':
+     - loadbalancer
+					</code></pre>
+				</section>
+				<section>
+					<h2>Anatomy of an SLS file</h2>
+						<ul>
+							<li>Here's an example SLS file:
+<pre><code># /srv/salt/webserver/init.sls
+apache:
+  pkg.installed
+</code></pre></li>
+							<li>This is equivalent, making the name argument explicit:
+<pre><code># /srv/salt/webserver/init.sls
+mywebsite:           # id
+  pkg:               # state module
+    - installed      # function
+    - name: apache   # name argument
+</code></pre></li>
+							<li>Let's look at the <a href="http://docs.saltstack.com/ref/states/all/salt.states.pkg.html#salt.states.pkg.installed"><code>pkg</code> state module's documentation.</a></li>
+				</section>
+				<section>
+					<h2>The High State</h2>
+						<ul>
+							<li>Let's look at what's called the <code>highstate</code>:
+								<pre><code>sudo salt minion state.show_highstate</code></pre></li>
+							<li>The high-state is a data structure compiled for the minion to tell it what it needs to do.</li>
+							<li>Let's apply it (but be cautious):
+								<pre><code>sudo salt minion state.highstate test=True</code></pre></li>
+							<li>Let's try pulling from the minion instead of pushing from the master:
+								<pre><code>sudo salt-call -l debug state.highstate</code></pre></li>
+						</ul>
+				</section>
+				<section>
+					<section>
+						<h2>Managing Files</h2>
+						<ul>
+							<li>The salt-master provides a shared filesystem that can be accessed by minions</li>
+							<li>This filesystem can be used to share configuration files or other content with minions</li>
+							<li>For example, let's assume we have a custom homepage for our webserver:
+								<pre><code>
+/var/www/index.html:
+  file.managed:
+    - source: salt://webserver/index.html
+    - require:
+      - pkg: apache
+								</pre></code></li>
+						</ul>
+					</section>
+					<section>
+						<h2>Filesystems</h2>
+						<ul>
+							<li>The most common use case is that you'll serve content out of the <code>salt://</code> filesystem exposed by the master</li>
+							<li>You can also directly retrieve content from an HTTP or FTP site, but only if you ensure that the file signature (hash) matches:
+								<pre><code>
+playzip:
+  file.managed:
+    - source: http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
+    - source_hash: md5=08fad782828df77be24ec42afa1980bb
+    - user: vagrant
+    - group: vagrant
+    - mode: 644
+								</pre></code></li>
+						</ul>
+					</section>
+					<section>
+						<h2>Other useful file functions</h2>
+						<ul>
+							<li>managed - ensures that a file exists and has the correct attributes</li>
+							<li>recurse - ensure an entire directory structure exists, with correct attributes</li>
+							<li>absent - ensure a file is not present</li>
+							<li>symlink - create a symlink</li>
+							<li>Check out the <a href="http://docs.saltstack.com/ref/states/all/salt.states.file.html"><code>file</code> state module documentation</a></li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<h2>Templating with Jinja</h2>
+					<ul>
+						<li>You can imagine a number of scenarios in which you want to customize a file based on the server to which you're deploying</li>
+						<li>For example, you want to customize the FQDN of the Apache server to reflect the FQDN of the host.</li>
+						<li>Jinja is a templating language that can be used for this purpose</li>
+					</ul>
+				</section>	
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
