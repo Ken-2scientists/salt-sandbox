@@ -1,4 +1,4 @@
-# [ATS](http://www.atsid.com) SaltStack Introductory Training.
+# [ATS](http://www.atsid.com) Salt Introductory Training.
 ## First presented: 2014-03-06
 
 The following outlines our learning objectives for this training session. 
@@ -30,3 +30,8 @@ Upon successfully completing this training, participants will be able to:
 * Use the SaltStack documentation to look up options for a state
 * Debug the salt state data structures
 * Use a salt-formula to use existing "cookbooks"
+
+## Materials
+
+* Access the [ATSIntroductorySaltTraining_2013-03-06.pdf](pdf slides) or
+* Clone this repo and open the index.html in a modern browser for an interactive presentation
