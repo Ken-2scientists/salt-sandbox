@@ -236,8 +236,8 @@ vagrant up minion
 						<li>Use the '<code>require</code>' attribute to ensure ordering of state application</li>
 						<li>Use jinja templating to execute conditional logic in a state file</li>
 						<li>Use the SaltStack documentation to look up options for a state</li>
-						<li>Debug the salt low-state data structure</li>
-						<li>Debug the sa</li>
+						<li>Debug the salt state data structures</li>
+						<li>Use a salt-formula to use existing "cookbooks"</li>
 					</ul>
 				</section>
 				<section>
@@ -373,13 +373,138 @@ playzip:
 					</section>
 				</section>
 				<section>
-					<h2>Templating with Jinja</h2>
+					<section>
+						<h2>Templating with Jinja</h2>
+						<ul>
+							<li>You can imagine a number of scenarios in which you want to customize the configuration based on the server to which you're deploying</li>
+							<li>On some distributions, you might want to select a different package to install.</li>
+							<li>You might want to customize the <code>ServerName</code> variable of the Apache conf to reflect the FQDN of the host.</li>
+							<li>Jinja is a templating language that can be used for this purpose:
+								<pre><code>apache:
+  pkg.installed:
+{% if grains.os == "Ubuntu" %}
+    - name: apache2
+{% endif %}
+  file.managed:
+    - source: salt://webserver/default
+    - name: /etc/apache2/sites-available/default
+    - template: jinja</pre></code></li>
+						</ul>
+					</section>
+					<section>
+						<h2>Content replacement</h2>
+						<pre><code>
+&lt;VirtualHost *:80&gt;
+        ServerName {{ grains.fqdn }}
+        ServerAdmin webmaster@{{ grains.fqdn }}
+
+        DocumentRoot /var/www
+        &lt;Directory /&gt;
+                Options FollowSymLinks
+                AllowOverride None
+        &lt;Directory&gt;
+        &lt;Directory /var/www/&gt;
+                Options Indexes FollowSymLinks MultiViews
+                AllowOverride None
+                Order allow,deny
+                allow from all
+        &lt;Directory&gt;
+&lt;/VirtualHost&gt;
+					</code></pre>
+					</section>
+				</section>
+				<section>
+					<h2>The Service state</h2>
 					<ul>
-						<li>You can imagine a number of scenarios in which you want to customize a file based on the server to which you're deploying</li>
-						<li>For example, you want to customize the FQDN of the Apache server to reflect the FQDN of the host.</li>
-						<li>Jinja is a templating language that can be used for this purpose</li>
+						<li>Often, you want to specifically ensure that a service is (or is not) running.</li>
+						<li>The Service state module provides this functionality:
+							<pre><code>
+ssh:
+  service.running:
+    - enable: True
+    - watch:
+      - file: /etc/ssh/sshd_config
+							</code></pre>
+						</li>
+						<li>Let's look at the <a href="http://docs.saltstack.com/ref/states/all/salt.states.service.html"><code>service</code> state module documentation</a></li>
 					</ul>
-				</section>	
+				</section>
+				<section>
+					<h2>Requisites</h2>
+					<ul>
+						<li>Managing a system often requires steps to be performed in a given order</li>
+						<li>Before a service can be started, the package has to be installed. Before the package is installed, a custom package repository may have to be added</li>
+					</ul><br/>&nbsp;
+					<table>
+						<tr>
+							<th>require</th>
+							<td>make sure the listed states have succeeded before ensuring this state</td>
+						</tr>
+						<tr>
+							<th>require_in</th>
+							<td>make sure that another state is checked after this state</td>
+						</tr>
+						<tr>
+							<th>watch</th>
+							<td>if the module implements a <code>mod_watch</code> method, call it when a watched state changes</td>
+						</tr>
+					</table>
+				</section>
+				<section>
+					<h2>Learning how to fish</h2>
+					<ul>
+						<li>If you find yourself forced to call the <code>cmd.run</code> state, chances are you're thinking about the problem imperatively</li>
+						<li>There's usually a state for that</li>
+						<li>Bookmark and get comfortable skimming the salt documentation: <a href="http://docs.saltstack.com/salt-modindex.html">http://docs.saltstack.com/salt-modindex.html</a>
+					</ul>
+				</section>
+				<section>
+					<section>
+						<h2>DRY: Don't Repeat Yourself</h2>
+						<ul>
+							<li>Salt is very powerful at managing systems, but it seems like we might end up with lots of duplication among projects trying to accomplish the same thing</li>
+							<li><a href="https://github.com/saltstack-formulas">salt-formulas</a> are an emerging repository of "recipes" for provisioning specific services such as MySQL, PostgreSQL, OpenStack, etc.</li>
+							<li>Where possible, we want to use salt-formulas (and contribute back to the community!)</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Example: Installing MySQL</h2>
+						<ul>
+							<li>Add a GitFS repository to the salt-master config:
+<pre><code>
+fileserver_backend:
+  - roots
+  - git
+
+gitfs_remotes:
+  - git://github.com/saltstack-formulas/mysql-formula.git
+</code></pre></li>
+							<li>Update your top file to install MySQL:
+<pre><code>
+base:
+  '*':
+    - mysql.server
+</code></pre>
+							</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<h2>Summary</h2>
+					<ul>
+						<li>Salt has a strong community behind it, and the ambition to become <em>the</em> infrastructure automation platform of choice</li>
+						<li>This introduction has not gone into advanced use cases or all of the options available:</li>
+						<li>Advanced topics (potential for future training) include:
+							<ul>
+								<li>Pillar for sensitive configuration data</li>
+								<li>salt-virt and salt-cloud for VM management</li>
+								<li>Writing new salt-state-modules (e.g., for bower)</li>
+								<li>The salt reactor system (for creating event-driven automation)</li>
+							</ul>
+						</li>
+					</ul>
+					<h3>Thanks!</h3>
+				</section>
 			</div>
 		</div>
 

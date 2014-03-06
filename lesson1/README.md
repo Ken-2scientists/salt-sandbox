@@ -21,9 +21,12 @@ Upon successfully completing this training, participants will be able to:
 
 * Organize state (sls) files in a consistent directory structure per conventions
 * Create a self-contained state (sls) file to accomplish a goal
+* Use the dry-run test=True argument to test states
 * Use the pkg state to install software on minions
 * Use the file state to manage files on minions
 * Use the service state to manage services
 * Use the 'require' attribute to ensure ordering of state application
-* Use the dry-run test=True argument to test states
+* Use jinja templating to execute conditional logic in a state file
 * Use the SaltStack documentation to look up options for a state
+* Debug the salt state data structures
+* Use a salt-formula to use existing "cookbooks"
