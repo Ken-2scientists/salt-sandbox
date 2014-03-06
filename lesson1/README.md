@@ -33,5 +33,5 @@ Upon successfully completing this training, participants will be able to:
 
 ## Materials
 
-* Access the [ATSIntroductorySaltTraining_2013-03-06.pdf](pdf slides) or
+* Access the [pdf slides](ATSIntroductorySaltTraining_2013-03-06.pdf) or
 * Clone this repo and open the index.html in a modern browser for an interactive presentation
