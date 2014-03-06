@@ -20,9 +20,15 @@
 		<!-- For syntax highlighting -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
 
-		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
 		<script>
-			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
 		</script>
 
 		<!--[if lt IE 9]>
@@ -36,6 +42,7 @@
 
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
+
 				<section>
 					<h1><a href="http://www.atsid.com">ATS</a> SaltStack Introductory Training</h1>
 					<h2>2014-03-06</h2>
@@ -43,9 +50,11 @@
 						<small>Presented by Ken Smith / <a href="http://twitter.com/Ken_2scientists">@Ken_2scientists</a></small>
 					</p>
 				</section>
+
 				<section>
 					<h1>Introduction</h1>
 				</section>
+				
 				<section>
 					<h2>Section Objectives</h2>
 					After this section, you should be able to:
@@ -255,7 +264,7 @@ vagrant up minion
 								<li>States describe how a minion <em>should be</em></li>
 								<li>States are backed by execution modules that <em>make it so</em></li>
 								<li>States, ideally, are idempotent</li>
-								<li>States can declare interdepencies</li>
+								<li>States can declare interdependencies</li>
 							</ul>
 						</ul>
 					</section>
@@ -506,6 +515,7 @@ base:
 					<h3>Thanks!</h3>
 				</section>
 			</div>
+
 		</div>
 
 		<script src="lib/js/head.min.js"></script>
@@ -531,11 +541,8 @@ base:
 				// Optional libraries used to extend on reveal.js
 				dependencies: [
 					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
-					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
-					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }
 				]
 			});
 
